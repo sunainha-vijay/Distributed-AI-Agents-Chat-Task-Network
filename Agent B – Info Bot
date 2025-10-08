@@ -1,0 +1,27 @@
+# agent_info.py
+import asyncio
+import websockets
+import json
+
+facts = {
+    "earth": "The Earth revolves around the Sun.",
+    "moon": "The Moon is Earth's only natural satellite."
+}
+
+async def info_bot():
+    async with websockets.connect("ws://localhost:8765") as websocket:
+        print("Info Bot connected!")
+        while True:
+            msg = await websocket.recv()
+            data = json.loads(msg)
+            if data["type"] == "task" and "info" in data["content"]:
+                key = data["content"].replace("info ", "").strip().lower()
+                response_text = facts.get(key, "I don't know that fact.")
+                response = {
+                    "sender": "InfoBot",
+                    "type": "response",
+                    "content": response_text
+                }
+                await websocket.send(json.dumps(response))
+
+asyncio.run(info_bot())
